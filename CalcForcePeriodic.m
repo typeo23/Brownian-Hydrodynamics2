@@ -1,5 +1,5 @@
 function [ force ] = CalcForcePeriodic(parts,eint,rc,boxSize)
-%Calc lennard johns repulsion between parts
+%Calc lennard johns repulsion between parts; Periodic version
 N = round(length(parts)/2);
 NN = 2*N;
 
