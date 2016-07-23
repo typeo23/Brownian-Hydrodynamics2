@@ -1,0 +1,121 @@
+
+/**************************************************************
+!*       Purpose: This program computes Struve function       * 
+!*                H0(x) using subroutine STVH0                *
+!*       Input :  x   --- Argument of H0(x) ( x ò 0 )         *
+!*       Output:  SH0 --- H0(x)                               *
+!*       Example:                                             *
+!*                   x          H0(x)                         *
+!*                ----------------------                      *
+!*                  0.0       .00000000                       * 
+!*                  5.0      -.18521682                       *
+!*                 10.0       .11874368                       *
+!*                 15.0       .24772383                       *
+!*                 20.0       .09439370                       *
+!*                 25.0      -.10182519                       *
+!* ---------------------------------------------------------- *
+!* REFERENCE: "Fortran Routines for Computation of Special    *
+!*             Functions, jin.ece.uiuc.edu/routines/routines  *
+!*             .html".                                        *
+!*                                                            *
+!*                          C++ Release By J-P Moreau, Paris. *
+!*                                  (www.jpmoreau.fr)         *
+!*************************************************************/ 
+#include <mex.h>
+#include <stdio.h>
+#include <math.h>
+
+
+void STVH1(double Xin[], double *SH1) {
+/*      =============================================
+!       Purpose: Compute Struve function H1(x)
+!       Input :  x   --- Argument of H1(x) ( x ò 0 )
+!       Output:  SH1 --- H1(x)
+!       ============================================= */
+        double A0,BY1,P1,PI,Q1,R,S,T,T2,TA1,X;
+	int K, KM;
+        X = Xin[];
+        PI=3.141592653589793;
+        R=1.0;
+        if (X <= 20.0) {
+           S=0.0;
+           A0=-2.0/PI;
+           for (K=1; K<=60; K++) {
+              R=-R*X*X/(4.0*K*K-1.0);
+              S=S+R;
+              if (fabs(R) < fabs(S)*1.0e-12) goto e15;
+           }
+e15:       *SH1=A0*S;
+        }
+        else {
+           S=1.0;
+           KM=int(0.5*X);
+           if (X > 50.0)  KM=25;
+           for (K=1; K<=KM; K++) {
+              R=-R*(4.0*K*K-1.0)/(X*X);
+              S=S+R;
+              if (fabs(R) < fabs(S)*1.0e-12) goto e25;
+           }
+e25:       T=4.0/X;
+           T2=T*T;
+           P1=((((0.42414e-5*T2-0.20092e-4)*T2+0.580759e-4)*T2-0.223203e-3)*T2+0.29218256e-2)*T2+0.3989422819;
+           Q1=T*(((((-0.36594e-5*T2+0.1622e-4)*T2-0.398708e-4)*T2+0.1064741e-3)*T2-0.63904e-3)*T2+0.0374008364);
+           TA1=X-0.75*PI;
+           BY1=2.0/sqrt(X)*(P1*sin(TA1)+Q1*cos(TA1));
+           *SH1=2.0/PI*(1.0+S/(X*X))+BY1;
+        }
+}
+
+void mexFunction( int nlhs, mxArray *plhs[],
+                  int nrhs, const mxArray *prhs[] )
+{
+  double *x,*y;
+  size_t mrows,ncols;
+  
+  /* Check for proper number of arguments. */
+  if(nrhs!=1) {
+    mexErrMsgIdAndTxt( "MATLAB:timestwo:invalidNumInputs",
+            "One input required.");
+  } else if(nlhs>1) {
+    mexErrMsgIdAndTxt( "MATLAB:timestwo:maxlhs",
+            "Too many output arguments.");
+  }
+  
+  /* The input must be a noncomplex scalar double.*/
+  mrows = mxGetM(prhs[0]);
+  ncols = mxGetN(prhs[0]);
+  if( !mxIsDouble(prhs[0]) || mxIsComplex(prhs[0]) ||
+      !(mrows==1 && ncols==1) ) {
+    mexErrMsgIdAndTxt( "MATLAB:timestwo:inputNotRealScalarDouble",
+            "Input must be a noncomplex scalar double.");
+  }
+  
+  /* Create matrix for the return argument. */
+  plhs[0] = mxCreateDoubleMatrix((mwSize)mrows, (mwSize)ncols, mxREAL);
+  
+  /* Assign pointers to each input and output. */
+  x = mxGetPr(prhs[0]);
+  y = mxGetPr(plhs[0]);
+  
+  /* Call the timestwo subroutine. */
+  STVH1(x,y);
+}
+
+/*
+void main() {
+        
+        double X, SH0;
+
+	printf("\n Please enter x: ");
+        scanf("%lf", &X);
+	printf("\n");
+        printf("   x        H0(x)     \n");
+        printf("----------------------\n");
+        
+	STVH0(X, &SH0);
+        
+	printf("%5.1f  %e\n\n", X, SH0);
+
+}
+
+// end of file mstvh0.cpp */
